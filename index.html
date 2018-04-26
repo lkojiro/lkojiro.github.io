@@ -42,16 +42,17 @@ $(document).ready(function() {
 <nav>
   <div class="nav-wrapper hide-on-small-and-down">
     <div class="navbar-fixed">
+      <a href="#" data-activates="mobile-demo" class="button-collapse"><i class="hide-on-med-and-up mdi-navigation-menu"></i></a>
       <nav class="white">
         <div class="center row">
-          <div class="col s12" style="margin-top:-12px;">
+          <div class="col s12" style="margin-top:-14px;">
             <ul class="section table-of-contents hide-on-small-and-down">
-              <li class="col m2"><a href="#bio">Me</a></li>
-              <li class="col m2"><a href="#skills">Skills</a></li>
-              <li class="col m2"><a href="#education">Education</a></li>
-              <li class="col m2"><a href="#experience">Experience</a></li>
-              <li class="col m2"><a href="#projects">Projects</a></li>
-              <li class="col m2"><a href="#resume">Resume</a></li>
+              <li class="col m2"><a.thicker href="#bio" class="deep-purple-text text-darken-3">Me</a></li>
+              <li class="col m2"><a.thicker href="#skills" class="deep-purple-text text-darken-3">Skills</a></li>
+              <li class="col m2"><a.thicker href="#education" class="deep-purple-text text-darken-3">Education</a></li>
+              <li class="col m2"><a.thicker href="#experience" class="deep-purple-text text-darken-3">Experience</a></li>
+              <li class="col m2"><a.thicker href="#projects" class="deep-purple-text text-darken-3">Projects</a></li>
+              <li class="col m2"><a.thicker href="#resume" class="deep-purple-text text-darken-3">Resume</a></li>
             </ul>
           </div>
         </div>
@@ -59,16 +60,15 @@ $(document).ready(function() {
     </div>
   </div>
   <div class="nav-wrapper hide-on-med-and-up">
-    <a class="brand-logo hide-on-med-and-up cyan-text text-darken-3">Josh</a>
     <div class="navbar">
       <a href="#" data-activates="mobile-demo" class="button-collapse"><i class="hide-on-med-and-up mdi-navigation-menu"></i></a>
       <ul class="side-nav" id="mobile-demo">
-        <li><a href="#bio" class="cyan-text text-darken-3">Me</a></li>
-        <li><a href="#skills" class="cyan-text text-darken-3">Skills</a></li>
-        <li><a href="#education" class="cyan-text text-darken-3">Education</a></li>
-        <li><a href="#experience" class="cyan-text text-darken-3">Experience</a></li>
-        <li><a href="#projects" class="cyan-text text-darken-3">Projects</a></li>
-        <li><a href="#resume" class="cyan-text text-darken-3">Resume</a></li>
+        <li><a href="#bio" class="deep-purple-text text-darken-3">Me</a></li>
+        <li><a href="#skills" class="deep-purple-text text-darken-3">Skills</a></li>
+        <li><a href="#education" class="deep-purple-text text-darken-3">Education</a></li>
+        <li><a href="#experience" class="deep-purple-text text-darken-3">Experience</a></li>
+        <li><a href="#projects" class="deep-purple-text text-darken-3">Projects</a></li>
+        <li><a href="#resume" class="deep-purple-text text-darken-3">Resume</a></li>
       </ul>
     </div>
   </div>
@@ -83,7 +83,7 @@ $(document).ready(function() {
         <div class="col center">
           <h5 class="center header col s12"
           style="text-shadow: -1px -1px 0 #000, 1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">
-            I'm a Sophomore studying ECE at Carnegie Mellon University.  Besides that, I'm a varsity swimmer, an Eagle Scout, a lover and creator of music, and a brother of Sigma Phi Epsilon.</h5>
+            I'm a Sophomore studying ECE at Carnegie Mellon University.  Besides that, I'm a varsity swimmer, an Eagle Scout, a lover and performer of music, and a brother of Sigma Phi Epsilon.</h5>
         </div>
         <br><br>
 
@@ -95,7 +95,8 @@ $(document).ready(function() {
 
 
   <div id="skills" class="section scrollspy no-pad-bot">
-    <h2 class="center cyan-text text-darken-3">Skills</h2>
+    <h2 class="center deep-orange-text"><i class=" large material-icons">keyboard</i></h2>
+    <h2 class="center deep-purple-text darken-4">Skills</h2>
     <div class="hide-on-small-and-down">
       <div class="center row">
         <div class="col s6 m3 center">
@@ -137,31 +138,35 @@ $(document).ready(function() {
 
 
   <div id="education" class="section scrollspy no-pad-bot">
-    <h2 class="center brown-text"><i class=" large material-icons">school</i></h2>
-    <h2 class="center cyan-text text-darken-3">Education</h2>
+    <h2 class="center deep-orange-text"><i class=" large material-icons">school</i></h2>
+    <h2 class="center deep-purple-text darken-4">Education</h2>
     <h4 class="center">Carnegie Mellon University</h4>
     <div class="center col s12 m4">
         <p class="center condensed light" style="font-size:20px">B.S. Electrical and Computer Engineering (Software Track)</p>
       </div>
 
       <div class="row">
-         <div class="center col s12 m6">
-           <img src="background2.jpg" style="width:250px;height:200px;">
-         </div>
          <div class="center col s12 m5">
+           <img src="booth.jpg" class = "circle" style="width:378px;height:284px;">
+         </div>
+         <div class="center col s12 m6">
            <p class="center condensed" style="font-size:25px">Relevant Coursework: </p>
            <ul class="collapsible">
             <li>
-              <div class="collapsible-header"><i class="material-icons">filter_drama</i>Introduction to Computer Systems</div>
+              <div class="collapsible-header"><i class="material-icons">blur_on</i>Introduction to Computer Systems</div>
               <div class="collapsible-body"><span>The goal of the course is to provide a programmer's view of how computer systems execute programs, store information, and communicate.  Topics covered include: machine-level code and its generation by optimizing compilers, performance evaluation and optimization, computer arithmetic, memory organization and management, networking technology and protocols, and supporting concurrent computation.</span></div>
             </li>
             <li>
-              <div class="collapsible-header"><i class="material-icons">place</i>Second</div>
-              <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
+              <div class="collapsible-header"><i class="material-icons">blur_on</i>Structure and Design of Digital Systems</div>
+              <div class="collapsible-body"><span>Basics in design and verification of digital systems, from logic gates through a simple microprocessor.</span></div>
             </li>
             <li>
-              <div class="collapsible-header"><i class="material-icons">whatshot</i>Third</div>
-              <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
+              <div class="collapsible-header"><i class="material-icons">blur_on</i>Principles of Imperative Programming</div>
+              <div class="collapsible-body"><span>Fundamental computer science and programming principles.  Introduction to C language and the analysis of basic algorithms. </span></div>
+            </li>
+            <li>
+              <div class="collapsible-header"><i class="material-icons">blur_on</i>Mathematical Foundations of Electrical Engineering</div>
+              <div class="collapsible-body"><span>Overview of important mathematical topics in electrical engineering.  Covers basic proof techniques, sets, differential equations, and matrices. </span></div>
             </li>
           </ul>
          </div>
@@ -172,48 +177,34 @@ $(document).ready(function() {
 
 
   <div class="parallax-container valign-wrapper">
-    <div class="section no-pad-bot">
-      <div class="container">
-        <div class="row center">
-          <h5 class="header col s12 light">A modern responsive front-end framework based on Material Design</h5>
-        </div>
-      </div>
-    </div>
-    <div class="parallax"><img src="background2.jpg" alt="Unsplashed background img 2"></div>
+    <div class="parallax"><img src="sunset.jpg" alt="Unsplashed background img 2"></div>
   </div>
 
-  <div class="container">
-    <div class="section">
-
-      <div class="row">
-        <div class="col s12 center">
-          <h3><i class="mdi-content-send brown-text"></i></h3>
-          <h4>Contact Us</h4>
-          <p class="left-align light">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam scelerisque id nunc nec volutpat. Etiam pellentesque tristique arcu, non consequat magna fermentum ac. Cras ut ultricies eros. Maecenas eros justo, ullamcorper a sapien id, viverra ultrices eros. Morbi sem neque, posuere et pretium eget, bibendum sollicitudin lacus. Aliquam eleifend sollicitudin diam, eu mattis nisl maximus sed. Nulla imperdiet semper molestie. Morbi massa odio, condimentum sed ipsum ac, gravida ultrices erat. Nullam eget dignissim mauris, non tristique erat. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae;</p>
-        </div>
-      </div>
-
-    </div>
+  <div id="experience" class="section scrollspy no-pad-bot">
+    <h2 class="center deep-orange-text"><i class=" large material-icons">power_settings_new</i></h2>
+    <h2 class="center deep-purple-text darken-4">Experience</h2>
   </div>
 
 
   <div class="parallax-container valign-wrapper">
-    <div class="section no-pad-bot">
-      <div class="container">
-        <div class="row center">
-          <h5 class="header col s12 light">A modern responsive front-end framework based on Material Design</h5>
-        </div>
-      </div>
-    </div>
-    <div class="parallax"><img src="background3.jpg" alt="Unsplashed background img 3"></div>
+    <div class="parallax"><img src="wean.jpg" alt="Unsplashed background img 3"></div>
+  </div>
+
+  <div id="experience" class="section scrollspy no-pad-bot">
+    <h2 class="center deep-orange-text"><i class=" large material-icons">camera</i></h2>
+    <h2 class="center deep-purple-text darken-4">Projects</h2>
+  </div>
+
+  <div class="parallax-container valign-wrapper">
+    <div class="parallax"><img src="HH.jpg" alt="Unsplashed background img 3"></div>
   </div>
 
   <footer class="page-footer teal">
     <div class="container">
       <div class="row">
         <div class="col l6 s12">
-          <h5 class="white-text">Company Bio</h5>
-          <p class="grey-text text-lighten-4">We are a team of college students working on this project like it's our full time job. Any amount would help support and continue development on this project and is greatly appreciated.</p>
+          <h5 class="white-text">Resume</h5>
+          <a class="waves-effect waves-light btn"><i class="material-icons right" href="https://cmu.box.com/s/k8jq3v7q50llneppo16uuzs1uu1sdjtj">attach_file</i>Here!</a>
 
 
         </div>
