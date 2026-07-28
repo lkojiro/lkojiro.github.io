@@ -1,0 +1,116 @@
+:root {
+    --bg: #fdfdf6;
+    --fg: #1a1a1a;
+    --muted: #555;
+    --link: #0000cc;
+    --link-visited: #551a8b;
+}
+html.dark {
+    --bg: #1a1a1a;
+    --fg: #e8e8e0;
+    --muted: #999;
+    --link: #6fb8ff;
+    --link-visited: #c9a6ff;
+}
+body {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: "Times New Roman", Times, serif;
+    text-align: left;
+    padding-left: 25%;
+    padding-right: 25%;
+}
+.theme-toggle {
+    margin-top: 0;
+    font-size: 0.9rem;
+}
+.theme-toggle a,
+.theme-toggle a:visited {
+    color: var(--fg);
+}
+.prompt {
+    font-weight: normal;
+    font-family: "Courier New", Courier, monospace;
+}
+.cursor {
+    font-family: "Courier New", Courier, monospace;
+    animation: blink 1s steps(1) infinite;
+}
+@keyframes blink {
+    0%, 49% { opacity: .45; }
+    50%, 100% { opacity: 0; }
+}
+.typed {
+    display: inline-block;
+    vertical-align: bottom;
+    font-family: "Courier New", Courier, monospace;
+    font-weight: normal;
+    letter-spacing: normal;
+}
+.page-header {
+    position: sticky;
+    top: 0;
+    background-color: var(--bg);
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+.parent-container {
+    display: block;
+}
+h2 {
+    font-size: 1.25rem;
+    margin-top: 1.75rem;
+    margin-bottom: 0.5rem;
+}
+h3 {
+    font-size: 1.05rem;
+    margin-bottom: 0.1rem;
+}
+.contact {
+    margin-top: 0;
+    font-size: 0.95rem;
+}
+.meta {
+    font-style: italic;
+    color: var(--muted);
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+}
+ul {
+    margin-top: 0.25rem;
+    padding-left: 1.25rem;
+}
+li {
+    margin-bottom: 0.4rem;
+}
+.ascii-canvas {
+    position: fixed;
+    top: 0;
+    display: block;
+    text-align: left;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 8px;
+    line-height: 0.85em;
+    color: var(--fg);
+    white-space: pre;
+    width: 25%;
+    height: 100vh;
+    overflow: hidden;
+    margin: 0;
+}
+#ascii-canvas {
+    right: 0;
+}
+#ascii-canvas-left {
+    left: 0;
+}
+p.note {
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+a {
+    color: var(--link);
+}
+a:visited {
+    color: var(--link-visited);
+}

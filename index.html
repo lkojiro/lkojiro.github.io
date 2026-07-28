@@ -1,9 +1,65 @@
 <!DOCTYPE html>
 <html>
+<head>
+    <title>Logan Kojiro</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        // Applied before body renders, so there's no flash of the wrong
+        // theme while the external stylesheet/scripts are still loading.
+        if (localStorage.getItem("theme") === "dark") {
+            document.documentElement.classList.add("dark");
+        }
+    </script>
+</head>
 <body>
+    <p id="ascii-canvas-left" class="ascii-canvas"></p>
+    <p id="ascii-canvas" class="ascii-canvas"></p>
 
-<h1>My First Heading</h1>
-<p>My first paragraph.</p>
-
+    <div class="parent-container">
+        <div class="page-header">
+            <h1>Logan Kojiro <span class="prompt">&gt;</span><span id="typed-text" class="typed"></span><span class="cursor">&#9608;</span></h1>
+            <p class="theme-toggle">[ <a href="#" id="theme-light">light</a> | <a href="#" id="theme-dark">dark</a> ]</p>
+        </div>
+        <hr>
+        <h2>About Me</h2>
+        <p>Software engineer with experience in a broad range of fields, from bio-robotics to design verification. Educated at Carnegie Mellon University, passionate about technology, enthusiastic about collaboration, all with a penchant for creative expression.</p>
+        <hr>
+        <h2>Get In Touch</h2>
+        <a href="mailto:lkojiro@icloud.com">email me</a>
+        <a href="https://www.linkedin.com/in/lkojiro/">linkedin</a>
+        <a href="https://github.com/lkojiro">github</a>
+        
+        <hr>
+        <h2>Where I've Worked</h2>
+        
+        <h3>Software Engineer &mdash; Ampere Computing</h3>
+        <p class="meta">Santa Clara, CA &nbsp;|&nbsp; August 2021 &ndash; March 2026</p>
+        
+        <h3>CNO Developer Intern &mdash; ManTech</h3>
+        <p class="meta">Herndon, VA &nbsp;|&nbsp; Summer 2019, Summer 2020</p>
+        
+        <h3>Full Stack Developer &mdash; Parthean</h3>
+        <p class="meta">Pittsburgh, PA &nbsp;|&nbsp; October 2019 - May 2020</p>
+        
+        <h3>Software Engineer Intern &mdash; ARIN Technologies</h3>
+        <p class="meta">Pittsburgh, PA &nbsp;|&nbsp; Summer 2018, Spring 2019</p>
+        
+        <h3>Research Assistant &mdash; CMU BioRobotics Lab</h3>
+        <p class="meta">Pittsburgh, PA &nbsp;|&nbsp; February 2017 &ndash; August 2017</p>
+        
+        <h2>Projects</h2>
+        <h3>Capstone Project: Automatic Gentlemen</h3>
+        <a href="http://course.ece.cmu.edu/~ece500/projects/s21-teame4/wp-content/uploads/sites/154/2021/03/Copy-of-Design-Report-Template.docx.pdf">Design Doc </a>
+        <a href="https://www.youtube.com/watch?v=SXWx0We07M0">Demo Video </a>
+        <!-- TODO embed gif of video, around 4:22-4:30 -->
+        <hr>
+        <h2>Music</h2>
+        <iframe width="70%" height="350" scrolling="no" frameborder="no" allow="autoplay; encrypted-media" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A2274716621&color=%238da5ac&auto_play=false&hide_related=false&show_comments=false&show_user=true&show_reposts=false&show_teaser=false"></iframe><div style="font-size: 10px; color: #cccccc;line-break: anywhere;word-break: normal;overflow: hidden;white-space: nowrap;text-overflow: ellipsis; font-family: Interstate,Lucida Grande,Lucida Sans Unicode,Lucida Sans,Garuda,Verdana,Tahoma,sans-serif;font-weight: 100;"><a href="https://soundcloud.com/paperkranes" title="Paper Kranes" target="_blank" style="color: #cccccc; text-decoration: none;">Paper Kranes</a> · <a href="https://soundcloud.com/paperkranes/sets/originals-remixes" title="Originals + Remixes" target="_blank" style="color: #cccccc; text-decoration: none;">Originals + Remixes</a></div>
+        <h5 id="score-display" style="opacity: 0.25">score: 0</h5>
+    </div>
+    
+    <script src="falling-ascii.js"></script>
+    <script src="typewriter.js"></script>
+    <script src="theme.js"></script>
 </body>
 </html>
