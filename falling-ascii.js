@@ -514,9 +514,9 @@ function createFallingAsciiRenderer(elementId) {
 // same bangSmall instead of overlapping, while a near + far explosion at
 // the same time can still both be heard.
 var explosionSounds = {
-    small: new Audio("bangSmall.wav"),
-    medium: new Audio("bangMedium.wav"),
-    large: new Audio("bangLarge.wav")
+    small: new Audio("assets/bangSmall.wav"),
+    medium: new Audio("assets/bangMedium.wav"),
+    large: new Audio("assets/bangLarge.wav")
 };
 explosionSounds.small.volume = 0.05;
 explosionSounds.medium.volume = 0.1;

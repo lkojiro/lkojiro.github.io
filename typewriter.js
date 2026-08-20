@@ -1,7 +1,7 @@
 (function () {
     var PHRASES = [
         "software engineer", "verification engineer", "musician", "dj",
-        "urban hiker", "runner", "sharks fan", "music producer",
+        "urban hiker", "(slow) runner", "sharks fan", "music producer",
         "swimmer", "eagle scout", "karaoke enthusiast",
         "very qualified candidate", "beginner birder"
     ];

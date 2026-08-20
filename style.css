@@ -31,10 +31,12 @@ body {
 .prompt {
     font-weight: normal;
     font-family: "Courier New", Courier, monospace;
+    font-size: 1.2rem;
 }
 .cursor {
     font-family: "Courier New", Courier, monospace;
     animation: blink 1s steps(1) infinite;
+    font-size: 2rem;
 }
 @keyframes blink {
     0%, 49% { opacity: .45; }
@@ -45,6 +47,7 @@ body {
     vertical-align: bottom;
     font-family: "Courier New", Courier, monospace;
     font-weight: normal;
+    font-size: 2rem;
     letter-spacing: normal;
 }
 .page-header {
@@ -56,6 +59,9 @@ body {
 }
 .parent-container {
     display: block;
+}
+h1 {
+    font-size: 3rem;
 }
 h2 {
     font-size: 1.25rem;
@@ -70,11 +76,46 @@ h3 {
     margin-top: 0;
     font-size: 0.95rem;
 }
+.about-me {
+    display: flow-root;
+}
+.about-photo {
+    float: right;
+    max-width: 40%;
+    margin-left: 1.25rem;
+    margin-bottom: 0.5rem;
+}
 .meta {
     font-style: italic;
     color: var(--muted);
     margin-top: 0;
     margin-bottom: 0.5rem;
+}
+.job {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+.job-logo {
+    width: 3rem;
+    height: 3rem;
+    object-fit: contain;
+    flex-shrink: 0;
+    border-radius: 4px;
+}
+.job-logo.logo-dark {
+    display: none;
+}
+html.dark .job-logo.logo-light {
+    display: none;
+}
+html.dark .job-logo.logo-dark {
+    display: block;
+}
+.job-info h3,
+.job-info .meta {
+    margin-top: 0;
 }
 ul {
     margin-top: 0.25rem;
