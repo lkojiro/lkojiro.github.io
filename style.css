@@ -91,6 +91,28 @@ h3 {
     margin-top: 0;
     margin-bottom: 0.5rem;
 }
+.youtube-embed {
+    position: relative;
+    width: 70%;
+    aspect-ratio: 16 / 9;
+    margin-top: 1rem;
+}
+.youtube-embed iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    border-radius: 6px;
+}
+.project-media {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 6px;
+    margin: 0.5rem 0;
+}
 .job {
     display: flex;
     align-items: center;
@@ -154,4 +176,46 @@ a {
 }
 a:visited {
     color: var(--link-visited);
+}
+.av-hidden {
+    display: none;
+}
+.av-btn {
+    font-family: "Times New Roman", Times, serif;
+    font-size: 1rem;
+    padding: 0.5rem 1.25rem;
+    background-color: transparent;
+    color: var(--fg);
+    border: 1px solid var(--fg);
+    border-radius: 4px;
+    cursor: pointer;
+}
+.av-btn:hover {
+    background-color: var(--fg);
+    color: var(--bg);
+}
+.av-btn-debug {
+    border-style: dashed;
+    color: var(--muted);
+    font-size: 0.85rem;
+    padding: 0.35rem 0.9rem;
+}
+.av-btn-debug:hover {
+    background-color: var(--muted);
+    color: var(--bg);
+}
+.av-visualizer {
+    display: block;
+    width: 100%;
+    height: 8rem;
+    margin: 1rem 0;
+}
+.av-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+.av-receipt ul {
+    margin-top: 0.25rem;
 }
