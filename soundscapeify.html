@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Soundscapeify &mdash; Logan Kojiro</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        // Applied before body renders, so there's no flash of the wrong
+        // theme while the external stylesheet/scripts are still loading.
+        if (localStorage.getItem("theme") === "dark") {
+            document.documentElement.classList.add("dark");
+        }
+    </script>
+</head>
+<body>
+    <div class="parent-container">
+        <div class="page-header">
+            <h1>Soundscapeify</h1>
+            <p class="theme-toggle">[ <a href="#" id="theme-light">light</a> | <a href="#" id="theme-dark">dark</a> ]</p>
+        </div>
+        <hr>
+
+        <!-- ============ STATE 1: hero / connect ============ -->
+        <section id="av-state-hero">
+            <p>Connect your Spotify account and this page generates a continuous, evolving soundscape from your top artists and saved library &mdash; not a playlist, a synthesized instrument mix built from your genres.</p>
+            <p class="note">Read-only. Nothing is posted, modified, or stored anywhere &mdash; your data stays in this browser tab.</p>
+            <button id="av-connect-btn" class="av-btn">Connect with Spotify</button>
+        </section>
+
+        <!-- ============ STATE 2: analyzing ============ -->
+        <section id="av-state-analyzing" class="av-hidden">
+            <p id="av-analyzing-message">Connecting…</p>
+        </section>
+
+        <!-- ============ STATE 3: result ============ -->
+        <section id="av-state-result" class="av-hidden">
+            <button id="av-play-btn" class="av-btn av-hidden">▶ Start Soundscape</button>
+            <canvas id="av-visualizer" class="av-visualizer"></canvas>
+
+            <div class="av-controls">
+                <button id="av-shuffle-btn" class="av-btn av-hidden">Shuffle</button>
+                <button id="av-stop-btn" class="av-btn av-hidden">Stop</button>
+                <button id="av-randomize-btn" class="av-btn av-btn-debug av-hidden" title="Debug: re-rolls palette, scale, drums, and tempo all at once">🎲 Randomize (debug)</button>
+                <p id="av-mode-label" class="meta"></p>
+                <p id="av-progression-label" class="meta"></p>
+                <p id="av-drum-label" class="meta"></p>
+            </div>
+
+            <h2>Your Sound Receipt</h2>
+            <div class="av-receipt">
+                <p>Root note: <strong id="av-root-note">—</strong></p>
+                <p>Average track era: <strong id="av-avg-year">—</strong></p>
+                <p>Genre mix (weighted by how much you listen to each artist):</p>
+                <ul id="av-genre-list"></ul>
+            </div>
+
+            <h2>How This Works</h2>
+            <p class="note">Spotify deprecated its per-track "audio features" (energy, valence, tempo, etc.) for new apps in late 2024, so this doesn't read pre-computed audio DNA. Instead, each genre in your library maps to a hand-built instrument archetype, weighted by how often that genre shows up in your top artists; a sustained pad plays one of five hand-written chord progressions in your session's key, deterministically picked so it's consistently "yours"; and your single most-listened-to genre picks a matching synthesized drum pattern, tempo-matched to the session's BPM. Tempo and mode are fixed to a consistent, pleasant range regardless of your library &mdash; only the instrumentation, layering, harmony, and rhythm reflect your actual taste. The mix continuously adds, removes, and mutates layers for as long as you leave the tab open; Shuffle changes the musical mode (and, in turn, the chord progression) and toggles the drums to their other pattern, both landing cleanly on the next bar &mdash; everything else stays put.</p>
+        </section>
+    </div>
+
+    <script src="https://unpkg.com/tone@14.8.49/build/Tone.js"></script>
+    <script src="audio-viz/music-theory.js"></script>
+    <script src="audio-viz/chord-progressions.js"></script>
+    <script src="audio-viz/genre-engine.js"></script>
+    <script src="audio-viz/instrument-archetypes.js"></script>
+    <script src="audio-viz/synth-layer.js"></script>
+    <script src="audio-viz/chord-layer.js"></script>
+    <script src="audio-viz/drum-patterns.js"></script>
+    <script src="audio-viz/drum-layer.js"></script>
+    <script src="audio-viz/soundscape-engine.js"></script>
+    <script src="audio-viz/spotify-auth.js"></script>
+    <script src="audio-viz/spotify-data.js"></script>
+    <script src="audio-viz/genre-lookup.js"></script>
+    <script src="audio-viz/visualizer.js"></script>
+    <script src="audio-viz/main.js"></script>
+    <script src="theme.js"></script>
+</body>
+</html>

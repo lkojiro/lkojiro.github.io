@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Logan Kojiro</title>
     <link rel="stylesheet" href="style.css">
     <script>
@@ -81,13 +82,32 @@
 
         <hr>
         <h2>Projects</h2>
-        <h3>Capstone Project: Automatic Gentlemen</h3>
-        <a href="http://course.ece.cmu.edu/~ece500/projects/s21-teame4/wp-content/uploads/sites/154/2021/03/Copy-of-Design-Report-Template.docx.pdf">Design Doc </a>
-        <a href="https://www.youtube.com/watch?v=SXWx0We07M0">Demo Video </a>
+
+        <h3>Terminal Tracer &mdash; C++20 Real-Time 3D Rasterizer</h3>
+        <p class="meta">A personal academic exercise in computer graphics</p>
+        <video class="project-media" src="assets/ascii_animation.mp4" autoplay loop muted playsinline></video>
+        <p>A from-scratch software rasterizer rendering real-time ASCII terminal graphics from .obj mesh files, with Z-buffering, MSAA anti-aliasing, and Lambertian shading for accurate depth handling and surface lighting.</p>
+        <a href="https://github.com/lkojiro/terminal-tracer">GitHub </a>
+
+        <h3>GPU Fluid Simulation &mdash; SPH Solver in CUDA, OpenMP &amp; OpenGL</h3>
+        <p class="meta">The final project for CMU's Parallel Computer Architecture and Programming course</p>
+        <img class="project-media" src="assets/SPH_100K.gif" alt="GPU fluid simulation of 100,000+ particles rendered in real time" loading="lazy">
+        <p>A Smoothed Particle Hydrodynamics fluid solver implemented in three variants &mdash; sequential, OpenMP, and CUDA &mdash; with real-time rendering through an OpenGL Vertex Buffer Object pipeline. Designed a Z-order (Morton code) spatial grid bounding each particle's neighbor search to 27 local blocks instead of a naive O(N&sup2;) scan, and diagnosed a CUDA kernel serialization bug to achieve up to a 279,654x speedup and real-time simulation of 100,000+ particles.</p>
+        <a href="https://oadrian.github.io/GPUFluidSimulator/">Project Site</a><a>  </a>
+        <a href="https://github.com/oadrian/GPUFluidSimulator">GitHub</a>
+
+        <h3>Automatic Gentlemen: Computer Vision Powered Cup Pong Playing Robot</h3>
+        <p class="meta">The capstone project for CMU's Electrical & Computer Engineering program</p>
+        <a href="http://course.ece.cmu.edu/~ece500/projects/s21-teame4/wp-content/uploads/sites/154/2021/03/Copy-of-Design-Report-Template.docx.pdf">Design Doc</a><a>  </a>
+        <a href="https://www.youtube.com/watch?v=SXWx0We07M0">Demo Video</a>
         <!-- TODO embed gif of video, around 4:22-4:30 -->
         <hr>
         <h2>Music</h2>
         <iframe width="70%" height="350" scrolling="no" frameborder="no" allow="autoplay; encrypted-media" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A2274716621&color=%238da5ac&auto_play=false&hide_related=false&show_comments=false&show_user=true&show_reposts=false&show_teaser=false"></iframe><div style="font-size: 10px; color: #cccccc;line-break: anywhere;word-break: normal;overflow: hidden;white-space: nowrap;text-overflow: ellipsis; font-family: Interstate,Lucida Grande,Lucida Sans Unicode,Lucida Sans,Garuda,Verdana,Tahoma,sans-serif;font-weight: 100;"><a href="https://soundcloud.com/paperkranes" title="Paper Kranes" target="_blank" style="color: #cccccc; text-decoration: none;">Paper Kranes</a> · <a href="https://soundcloud.com/paperkranes/sets/originals-remixes" title="Originals + Remixes" target="_blank" style="color: #cccccc; text-decoration: none;">Originals + Remixes</a></div>
+
+        <div class="youtube-embed">
+            <iframe src="https://www.youtube.com/embed/C-HN8aJd1Gw?si=VNS_-WscN8njC2Er" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        </div>
         <h5 id="score-display" style="opacity: 0.25">score: 0</h5>
     </div>
     
