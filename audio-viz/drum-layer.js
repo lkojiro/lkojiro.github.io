@@ -12,7 +12,7 @@
 //
 // -- Arrangement -----------------------------------------------------
 // Each seed pattern expands into 5 sections (drum-patterns.js):
-// basic / buildup (4 bars: low for the first 2, high for the last 2) /
+// basic / buildup (low-energy first half, high-energy second half) /
 // main / bSection. This layer runs a small state machine deciding which
 // section plays when, so the drums build and release tension over the
 // course of the whole session instead of looping one groove forever.
@@ -24,28 +24,46 @@
 // drum section change never lands mid-progression -- it always coincides
 // with the chord progression looping back to its first chord too.
 //
+// -- Data-driven, per genre, via arrangement-data.js --------------------
+// Both WHICH section comes next and HOW LONG it runs are sampled from
+// real per-genre section-sequencing statistics (Harmonix Set, see
+// arrangement-data.js's header) whenever the dominant cluster has data --
+// pop/hiphop/electronic/rock/indie/folk all do. This replaced an earlier
+// version of this file with one hand-picked transition graph shared by
+// every genre; the whole point of swapping it out was that a fixed graph
+// "feels set in stone" regardless of what's actually in the user's
+// library (direct user feedback). The graph below is now ONLY what jazz
+// and fallback fall back to -- Harmonix has zero jazz songs, so those two
+// clusters keep the original hand-authored rules:
+//
 //   SILENCE (4 bars) -> BASIC
 //   BASIC (4 or 8 bars) -> BUILDUP, unless it was entered from MAIN's
 //                          wind-down branch, in which case -> SILENCE
 //   BUILDUP (ALWAYS 4 bars) -> MAIN
-//   MAIN (4 or 8 bars) -> 60% B_SECTION (keep the energy going),
-//                          40% BASIC, heading toward SILENCE (wind down)
+//   MAIN (8 or 12 bars -- always >=2 trips through the 4-bar chord
+//         progression, so it actually gets to sit once it arrives) ->
+//         60% B_SECTION (keep the energy going), 40% BASIC, heading
+//         toward SILENCE (wind down)
 //   B_SECTION (4 bars) -> BUILDUP
 //
 // SILENCE -> BASIC and BASIC's fork are the two rules added on top of
 // what was asked for (always-main-after-buildup, main loops 2-4x, main
 // exits to b-section+build or basic+nothing) -- something has to bring
-// the piece back to life after "nothing," and BASIC's own length
-// mirrors MAIN's own variability so the two "steady" sections feel like
-// part of the same structural family. 60/40 favors continuing over
-// winding down, matching the "positive, engaging" brief the rest of this
-// project was built around.
+// the piece back to life after "nothing." MAIN's minimum was bumped from
+// 4 to 8 bars after listening -- one 4-bar pass felt like a quick
+// pass-through rather than a real arrival. BASIC stays shorter (4 or 8):
+// it's the stripped-down section, not the destination. 60/40 favors
+// continuing over winding down, matching the "positive, engaging" brief
+// the rest of this project was built around.
 //
-// Fills happen on the LAST bar before ANY section change (not just
-// buildup->main) -- a fill's job is to announce a transition, so this
-// generalizes cleanly to every transition point using the exact same
-// fillProbability roll. SILENCE is excluded: a fill into silence defeats
-// the point of the silence.
+// That same "MAIN needs to actually arrive" reasoning is why _enterSection()
+// floors a data-sampled MAIN duration at 8 bars even for the data-driven
+// clusters -- real songs do sometimes sit in a chorus for only 4 bars,
+// but that specific tuning came from direct listening feedback on THIS
+// piece and is kept as a hard floor rather than overridden by the data.
+// Every other section (including BUILDUP, which stays coupled to its own
+// low/high split -- see buildupTotalBars below) uses the sampled duration
+// as-is.
 //
 // It's also reactive to Shuffle: toggles to the dominant genre's OTHER
 // seed pattern (drums have no pitch, so mode itself means nothing here)
@@ -55,14 +73,34 @@
 // mid-bar -- same "land the change on a sensible musical boundary"
 // reasoning as ChordLayer restarting its progression on a mode change.
 //
-// -- Muted / reveal ----------------------------------------------------
-// `muted` (constructor param, single on/off switch): while true, the
-// layer still runs everything above normally -- stepping, arranging,
-// choosing fills -- it's just silent. The current behavior built on that
-// switch: start muted, and the first fill that plays (on ANY section
-// transition, arrangement runs the whole time underneath) unmutes and
-// stays unmuted for the rest of the session. Flip DEFAULT_MUTED to false
-// to bypass this and have drums audible from the start instead.
+// -- Starting section ---------------------------------------------------
+// A coin flip (STARTS_SILENT_PROBABILITY) decides whether the session
+// opens in SILENCE (4 quiet bars before BASIC's real content) or straight
+// into BASIC (drums audible from the first bar). This used to always be
+// SILENCE, via a separate mute-until-first-fill mechanism -- removed
+// because it always read as the same slow open regardless of genre, and
+// because fills (see below) no longer exist to trigger the reveal.
+//
+// It's ONE shared probability across every genre, not per-cluster, on
+// purpose: Harmonix's segment files DO tag a "silence" section at
+// literally every song's t=0, which looked at first like real per-genre
+// signal (rock: silence-first 82% of the time!) until checking its
+// duration -- median 2-5 seconds, never past ~10, across every genre
+// alike. That's an annotation convention marking the pre-song count-in/
+// room tone, not a real "this genre opens quiet" fact, so it would have
+// been dishonest to ship it as genre-differentiated data. This project's
+// rule throughout has been: real data where it's real, and an honest
+// hand-picked default where it isn't -- see melodic-data.js/
+// arrangement-data.js's own headers for the same principle applied
+// elsewhere.
+//
+// -- Fills: removed -------------------------------------------------
+// This layer used to substitute a one-bar fill on the last bar before any
+// section change, to announce the turnover. Removed once the transitions
+// themselves became genre-data-driven (arrangement-data.js): a fill's
+// whole job was announcing an otherwise-arbitrary hand-picked change, and
+// once the transitions are already a real, differentiated per-genre
+// event, a fill on top of it read as redundant rather than additive.
 //
 // -- Humanization --------------------------------------------------
 // The "soul" doesn't come from the programmed grids alone -- per-hit
@@ -70,7 +108,7 @@
 // ask for it) a swing delay on the off-beat 8th-note steps. See
 // _swingOffset / _triggerVoice.
 //
-// Depends on: Tone.js, drum-patterns.js
+// Depends on: Tone.js, drum-patterns.js, arrangement-data.js, drum-kits.js
 
 (function (global) {
     "use strict";
@@ -79,12 +117,11 @@
     const MAX_TIMING_JITTER_SEC = 0.008; // subtler than melodic layers' jitter -- drums need to stay tight
     const VELOCITY_JITTER = 0.1;         // +/- 10%, per hit
 
-    const DEFAULT_FILL_PROBABILITY = 0.5; // chance a fill plays on any section's last bar. The one knob to tune.
-    const DEFAULT_MUTED = true;   // start silent; see file header for the reveal-on-first-fill behavior
-    const UNMUTE_FADE_SEC = 1.5;  // how fast the drums ramp in once revealed -- a quick swell, not instant, not a slow fade
+    const STARTS_SILENT_PROBABILITY = 0.4; // chance the session opens in SILENCE vs. straight into BASIC; see file header
 
-    const MAIN_CONTINUE_PROBABILITY = 0.6; // MAIN -> B_SECTION (continue) vs. -> BASIC (wind down); see file header
-    const BUILDUP_BARS = 4; // always -- half low-energy, half high-energy; see file header for why 4, not 2
+    const MAIN_CONTINUE_PROBABILITY = 0.6; // jazz/fallback only: MAIN -> B_SECTION (continue) vs. -> BASIC (wind down); see file header
+    const BUILDUP_BARS = 4; // jazz/fallback only -- always; half low-energy, half high-energy; see file header for why 4, not 2
+    const MAIN_MIN_BARS = 8; // floor applied even to data-sampled MAIN durations -- see file header
 
     const SECTION = {
         SILENCE: "silence",
@@ -92,6 +129,23 @@
         BUILDUP: "buildup",
         MAIN: "main",
         B_SECTION: "bSection",
+    };
+
+    // Bridges this file's section constants and arrangement-data.js's
+    // Harmonix-derived state keys.
+    const SECTION_TO_STATE_KEY = {
+        [SECTION.SILENCE]: "SILENCE",
+        [SECTION.BASIC]: "BASIC",
+        [SECTION.BUILDUP]: "BUILDUP",
+        [SECTION.MAIN]: "MAIN",
+        [SECTION.B_SECTION]: "B_SECTION",
+    };
+    const STATE_KEY_TO_SECTION = {
+        SILENCE: SECTION.SILENCE,
+        BASIC: SECTION.BASIC,
+        BUILDUP: SECTION.BUILDUP,
+        MAIN: SECTION.MAIN,
+        B_SECTION: SECTION.B_SECTION,
     };
 
     class DrumLayer {
@@ -107,16 +161,16 @@
         //   time of every actual kick hit (rests don't fire it) -- lets
         //   another layer sidechain-duck off the kick without this class
         //   needing to know anything about who's listening.
-        // fillProbability: optional override of DEFAULT_FILL_PROBABILITY
-        // muted: optional override of DEFAULT_MUTED
-        constructor({
-            dominantCluster, bpm, outputBus, onPatternChange, onKick,
-            fillProbability = DEFAULT_FILL_PROBABILITY, muted = DEFAULT_MUTED,
-        }) {
+        // forceAudibleStart: optional, defaults to false -- skips the
+        //   SILENCE coin flip entirely and always opens on BASIC. Used by
+        //   soundscape-engine.js's "drumIntro" opening style, where the
+        //   drums ARE the cold open and a session-opening silent stretch
+        //   would undercut the whole point. See that file's INTRO_STYLES.
+        constructor({ dominantCluster, bpm, outputBus, onPatternChange, onKick, forceAudibleStart = false }) {
             this.onPatternChange = onPatternChange;
             this.onKick = onKick;
-            this.fillProbability = fillProbability;
-            this.muted = muted;
+            this.dominantCluster = dominantCluster; // picks WHICH genre's arrangement-data.js stats drive the state machine below
+            this.kit = global.DrumKits.kitFor(dominantCluster); // and which genre's drum SYNTHESIS this layer builds below, see drum-kits.js
 
             // the two seed patterns Shuffle toggles between -- always the
             // dominant genre's own patterns, so shuffling drums never
@@ -128,29 +182,38 @@
             this.pendingArrangementReset = false; // set by shuffle(), applied at the next downbeat
             this.onPatternChange?.(this.pattern);
 
-            this._enterSection(SECTION.BASIC); // arrangement starts here, see file header for why not SILENCE
+            // opens in SILENCE or straight into BASIC, see file header for
+            // why this is one flat coin flip rather than per-genre data --
+            // unless forceAudibleStart overrides it to always BASIC
+            const opensSilent = !forceAudibleStart && Math.random() < STARTS_SILENT_PROBABILITY;
+            this._enterSection(opensSilent ? SECTION.SILENCE : SECTION.BASIC);
             this.basicExit = SECTION.BUILDUP;
             this.activeGrid = this._gridForCurrentSection();
 
             this.sixteenthSec = Tone.Time("16n").toSeconds();
 
-            this.gainNode = new Tone.Gain(0); // starts silent; fadeIn() brings it up (subject to `muted`, see below)
+            this.gainNode = new Tone.Gain(0); // starts silent; fadeIn() brings it up
             this.gainNode.connect(outputBus);
+
+            // Every voice below is built from this.kit (drum-kits.js) --
+            // pitch/envelope/filter values that used to be hardcoded
+            // constants here, identical for every genre. See that file's
+            // header for what varies per cluster and why.
 
             // kick: pitched membrane synthesis, no filter needed -- its
             // own pitch envelope does the tone-shaping
             this.kick = new Tone.MembraneSynth({
-                pitchDecay: 0.05, octaves: 6,
-                envelope: { attack: 0.001, decay: 0.3, sustain: 0 },
+                pitchDecay: this.kit.kick.pitchDecay, octaves: this.kit.kick.octaves,
+                envelope: this.kit.kick.envelope,
             }).connect(this.gainNode);
 
             // snare: noise burst through a bandpass filter for that
             // characteristic crack instead of a raw white-noise thump
             this.snare = new Tone.NoiseSynth({
-                noise: { type: "white" },
-                envelope: { attack: 0.001, decay: 0.15, sustain: 0 },
+                noise: { type: this.kit.snare.noiseType },
+                envelope: this.kit.snare.envelope,
             });
-            this.snareFilter = new Tone.Filter(1800, "bandpass");
+            this.snareFilter = new Tone.Filter(this.kit.snare.filterFreq, this.kit.snare.filterType);
             this.snare.chain(this.snareFilter, this.gainNode);
 
             // closed/open hihat are separate voices (not one voice with a
@@ -159,49 +222,59 @@
             // kit's closed hat choking an open hat is a nice future
             // refinement, not implemented here
             this.hihatClosed = new Tone.MetalSynth({
-                envelope: { attack: 0.001, decay: 0.05, release: 0.01 },
-                harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 1.5,
+                envelope: this.kit.hihatClosed.envelope,
+                harmonicity: this.kit.hihatClosed.harmonicity, modulationIndex: this.kit.hihatClosed.modulationIndex,
+                resonance: this.kit.hihatClosed.resonance, octaves: this.kit.hihatClosed.octaves,
             }).connect(this.gainNode);
 
             this.hihatOpen = new Tone.MetalSynth({
-                envelope: { attack: 0.001, decay: 0.3, release: 0.1 },
-                harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 1.5,
+                envelope: this.kit.hihatOpen.envelope,
+                harmonicity: this.kit.hihatOpen.harmonicity, modulationIndex: this.kit.hihatOpen.modulationIndex,
+                resonance: this.kit.hihatOpen.resonance, octaves: this.kit.hihatOpen.octaves,
             }).connect(this.gainNode);
 
             // toms: two more membrane voices (same synthesis as kick, just
             // higher-pitched notes + a shorter, more resonant decay) --
-            // used sparingly, mostly in buildup/bSection/fills, so they
-            // read as an arrangement device rather than part of the core
-            // groove (see drum-patterns.js's section derivation)
+            // used sparingly, mostly in buildup/bSection, so they read as
+            // an arrangement device rather than part of the core groove
+            // (see drum-patterns.js's section derivation)
             this.tomLow = new Tone.MembraneSynth({
-                pitchDecay: 0.08, octaves: 4,
-                envelope: { attack: 0.001, decay: 0.25, sustain: 0 },
+                pitchDecay: this.kit.tomLow.pitchDecay, octaves: this.kit.tomLow.octaves,
+                envelope: this.kit.tomLow.envelope,
             }).connect(this.gainNode);
             this.tomHigh = new Tone.MembraneSynth({
-                pitchDecay: 0.08, octaves: 4,
-                envelope: { attack: 0.001, decay: 0.18, sustain: 0 },
+                pitchDecay: this.kit.tomHigh.pitchDecay, octaves: this.kit.tomHigh.octaves,
+                envelope: this.kit.tomHigh.envelope,
             }).connect(this.gainNode);
 
-            // perc: a second noise voice, brighter/clickier than the snare
-            // (highpass instead of bandpass) -- shaker/rim-click color,
-            // used as connective texture in buildup/bSection
-            this.perc = new Tone.NoiseSynth({
-                noise: { type: "white" },
-                envelope: { attack: 0.001, decay: 0.06, sustain: 0 },
-            });
-            this.percFilter = new Tone.Filter(3000, "highpass");
-            this.perc.chain(this.percFilter, this.gainNode);
+            // perc: EITHER a second noise voice (brighter/clickier than
+            // the snare -- shaker/rim-click color, used as connective
+            // texture in buildup/bSection) OR, for jazz specifically, a
+            // genuine ride cymbal (a second, warmer MetalSynth) -- see
+            // drum-kits.js's header for why jazz is the one cluster where
+            // this voice isn't a noise burst at all.
+            if (this.kit.perc.type === "metal") {
+                this.perc = new Tone.MetalSynth({
+                    envelope: this.kit.perc.envelope,
+                    harmonicity: this.kit.perc.harmonicity, modulationIndex: this.kit.perc.modulationIndex,
+                    resonance: this.kit.perc.resonance, octaves: this.kit.perc.octaves,
+                }).connect(this.gainNode);
+                this.percFilter = null; // no separate filter node for this voice -- nothing to dispose()
+            } else {
+                this.perc = new Tone.NoiseSynth({
+                    noise: { type: this.kit.perc.noiseType },
+                    envelope: this.kit.perc.envelope,
+                });
+                this.percFilter = new Tone.Filter(this.kit.perc.filterFreq, this.kit.perc.filterType);
+                this.perc.chain(this.percFilter, this.gainNode);
+            }
 
             this.stepIndex = 0;
             this.active = false;
         }
 
-        // While muted, still goes "active" (stepping/arranging continues
-        // normally underneath) but the gain ramp is skipped -- silence is
-        // held until the first fill lifts `muted`. See file header.
         fadeIn(seconds) {
             this.active = true;
-            if (this.muted) return;
             this.gainNode.gain.cancelScheduledValues(Tone.now());
             this.gainNode.gain.rampTo(1, seconds);
         }
@@ -221,7 +294,7 @@
             this.tomLow.dispose();
             this.tomHigh.dispose();
             this.perc.dispose();
-            this.percFilter.dispose();
+            this.percFilter?.dispose(); // null for jazz's ride-cymbal perc -- see constructor
             this.gainNode.dispose();
         }
 
@@ -258,34 +331,49 @@
             this.pendingArrangementReset = true;
         }
 
-        _reveal() {
-            this.muted = false;
-            this.gainNode.gain.cancelScheduledValues(Tone.now());
-            this.gainNode.gain.rampTo(1, UNMUTE_FADE_SEC);
-        }
-
         // How many bars the section that's about to start should occupy.
         // Every value is a multiple of 4 -- never shorter -- so a section
         // boundary always lands on a bar where ChordLayer's 4-bar
         // progression is also looping back to its first chord (see file
-        // header). BUILDUP is always exactly BUILDUP_BARS (the one hard
-        // rule); everything else that isn't a fixed 4-bar transitional
-        // section (SILENCE, B_SECTION) varies 4 or 8, matching MAIN's own
-        // variability.
+        // header).
+        //
+        // Sampled from arrangement-data.js's real per-genre duration
+        // histogram when the dominant cluster has data; jazz/fallback (no
+        // data) use the original hand-authored ranges. MAIN gets a hard
+        // floor at MAIN_MIN_BARS either way -- see file header for why.
+        // BUILDUP's sampled length becomes buildupTotalBars, which
+        // _gridForCurrentSection() uses to still land its low/high split
+        // exactly halfway through regardless of how long BUILDUP ran.
         _enterSection(section) {
             this.section = section;
-            switch (section) {
-                case SECTION.SILENCE:   this.barsRemaining = 4; break;
-                case SECTION.BASIC:     this.barsRemaining = Math.random() < 0.5 ? 4 : 8; break;
-                case SECTION.BUILDUP:   this.barsRemaining = BUILDUP_BARS; break; // always -- see file header
-                case SECTION.MAIN:      this.barsRemaining = Math.random() < 0.5 ? 4 : 8; break;
-                case SECTION.B_SECTION: this.barsRemaining = 4; break;
+            const stateKey = SECTION_TO_STATE_KEY[section];
+            let dataBars = global.ArrangementData.durationFor(this.dominantCluster, stateKey);
+            if (section === SECTION.MAIN && dataBars !== null) {
+                dataBars = Math.max(MAIN_MIN_BARS, dataBars);
             }
+            switch (section) {
+                case SECTION.SILENCE:   this.barsRemaining = dataBars ?? 4; break;
+                case SECTION.BASIC:     this.barsRemaining = dataBars ?? (Math.random() < 0.5 ? 4 : 8); break;
+                case SECTION.BUILDUP:   this.barsRemaining = dataBars ?? BUILDUP_BARS; break;
+                case SECTION.MAIN:      this.barsRemaining = dataBars ?? (Math.random() < 0.5 ? 8 : 12); break; // >=2 chord-progression cycles
+                case SECTION.B_SECTION: this.barsRemaining = dataBars ?? 4; break;
+            }
+            if (section === SECTION.BUILDUP) this.buildupTotalBars = this.barsRemaining;
         }
 
         // Called when the current section's bars have run out -- decides
-        // and enters whatever comes next. See file header for the graph.
+        // and enters whatever comes next. Weighted-random per
+        // arrangement-data.js's real per-genre transition table when the
+        // dominant cluster has data; jazz/fallback (no data) fall through
+        // to the original hand-authored graph. See file header for both.
         _exitSection() {
+            const stateKey = SECTION_TO_STATE_KEY[this.section];
+            const nextStateKey = global.ArrangementData.nextSection(this.dominantCluster, stateKey);
+            if (nextStateKey) {
+                this._enterSection(STATE_KEY_TO_SECTION[nextStateKey]);
+                return;
+            }
+
             switch (this.section) {
                 case SECTION.SILENCE:
                     this._enterSection(SECTION.BASIC);
@@ -312,39 +400,27 @@
         }
 
         // The section-appropriate grid for the bar that's about to play.
-        // BUILDUP spans BUILDUP_BARS bars from one _enterSection() call
-        // (barsRemaining starts at BUILDUP_BARS) -- the first half plays
-        // the low-energy bar, the second half plays the high-energy one,
-        // so the escalation still lands its high point on the bar right
-        // before MAIN drops regardless of how long BUILDUP_BARS is.
+        // BUILDUP spans buildupTotalBars bars from the _enterSection()
+        // call that started it -- the first half plays the low-energy
+        // bar, the second half plays the high-energy one, so the
+        // escalation still lands its high point on the bar right before
+        // MAIN drops regardless of how long that BUILDUP happened to run.
         _gridForCurrentSection() {
             const sections = this.pattern.sections;
             switch (this.section) {
                 case SECTION.SILENCE:   return global.DrumPatterns.SILENT_GRID;
                 case SECTION.BASIC:     return sections.basic;
-                case SECTION.BUILDUP:   return this.barsRemaining > BUILDUP_BARS / 2 ? sections.buildupLow : sections.buildupHigh;
+                case SECTION.BUILDUP:   return this.barsRemaining > this.buildupTotalBars / 2 ? sections.buildupLow : sections.buildupHigh;
                 case SECTION.MAIN:      return sections.main;
                 case SECTION.B_SECTION: return sections.bSection;
             }
         }
 
         // Runs once per bar, at step 0 -- see scheduleStep(). Advances the
-        // state machine, picks this bar's grid, and rolls for a fill on
-        // the last bar of any (non-silent) section.
+        // state machine and picks this bar's grid.
         _advanceBar() {
             if (this.barsRemaining === 0) this._exitSection();
-
-            const grid = this._gridForCurrentSection();
-            const isLastBarOfSection = this.barsRemaining === 1;
-            const fillEligible = isLastBarOfSection && this.section !== SECTION.SILENCE;
-
-            if (fillEligible && Math.random() < this.fillProbability) {
-                this.activeGrid = grid.fills[Math.floor(Math.random() * grid.fills.length)];
-                if (this.muted) this._reveal();
-            } else {
-                this.activeGrid = grid;
-            }
-
+            this.activeGrid = this._gridForCurrentSection();
             this.barsRemaining--;
         }
 
@@ -367,29 +443,31 @@
                     this.basicExit = SECTION.BUILDUP;
                     this.pendingArrangementReset = false;
                 }
-                this._advanceBar(); // may pick a fill for the bar that's about to start, may transition sections
+                this._advanceBar(); // may transition sections for the bar that's about to start
             }
 
             this.stepIndex++;
 
             const grid = this.activeGrid;
-            this._triggerVoice(this.kick, grid.kick, 0.9, step, time,
-                (inst, t, v) => inst.triggerAttackRelease("C1", "8n", t, v),
-                // don't sidechain-duck the chords off a kick nobody can
-                // hear yet -- that'd read as an unexplained rhythmic dip
-                (t, v) => { if (!this.muted) this.onKick?.(t, v); });
-            this._triggerVoice(this.snare, grid.snare, 0.75, step, time,
+            const vel = this.kit.velocities;
+            this._triggerVoice(this.kick, grid.kick, vel.kick, step, time,
+                (inst, t, v) => inst.triggerAttackRelease(this.kit.kick.note, "8n", t, v),
+                // SILENCE's grid has no kick hits at all (SILENT_GRID is
+                // all zeros), so this naturally never fires during it --
+                // no separate mute check needed
+                (t, v) => this.onKick?.(t, v));
+            this._triggerVoice(this.snare, grid.snare, vel.snare, step, time,
                 (inst, t, v) => inst.triggerAttackRelease("16n", t, v));
-            this._triggerVoice(this.hihatClosed, grid.hihatClosed, 0.35, step, time,
+            this._triggerVoice(this.hihatClosed, grid.hihatClosed, vel.hihatClosed, step, time,
                 (inst, t, v) => inst.triggerAttackRelease("32n", t, v));
-            this._triggerVoice(this.hihatOpen, grid.hihatOpen, 0.3, step, time,
+            this._triggerVoice(this.hihatOpen, grid.hihatOpen, vel.hihatOpen, step, time,
                 (inst, t, v) => inst.triggerAttackRelease("8n", t, v));
-            this._triggerVoice(this.tomLow, grid.tomLow, 0.7, step, time,
-                (inst, t, v) => inst.triggerAttackRelease("G2", "8n", t, v));
-            this._triggerVoice(this.tomHigh, grid.tomHigh, 0.6, step, time,
-                (inst, t, v) => inst.triggerAttackRelease("C3", "8n", t, v));
-            this._triggerVoice(this.perc, grid.perc, 0.45, step, time,
-                (inst, t, v) => inst.triggerAttackRelease("32n", t, v));
+            this._triggerVoice(this.tomLow, grid.tomLow, vel.tomLow, step, time,
+                (inst, t, v) => inst.triggerAttackRelease(this.kit.tomLow.note, "8n", t, v));
+            this._triggerVoice(this.tomHigh, grid.tomHigh, vel.tomHigh, step, time,
+                (inst, t, v) => inst.triggerAttackRelease(this.kit.tomHigh.note, "8n", t, v));
+            this._triggerVoice(this.perc, grid.perc, vel.perc, step, time,
+                (inst, t, v) => inst.triggerAttackRelease(this.kit.perc.triggerDuration, t, v));
         }
     }
 

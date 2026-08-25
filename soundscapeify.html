@@ -44,29 +44,54 @@
                 <p id="av-mode-label" class="meta"></p>
                 <p id="av-progression-label" class="meta"></p>
                 <p id="av-drum-label" class="meta"></p>
+                <p id="av-debug-genre-label" class="meta"></p>
             </div>
 
             <h2>Your Sound Receipt</h2>
             <div class="av-receipt">
                 <p>Root note: <strong id="av-root-note">—</strong></p>
+                <p>Tempo: <strong id="av-bpm">—</strong></p>
                 <p>Average track era: <strong id="av-avg-year">—</strong></p>
                 <p>Genre mix (weighted by how much you listen to each artist):</p>
                 <ul id="av-genre-list"></ul>
             </div>
 
             <h2>How This Works</h2>
-            <p class="note">Spotify deprecated its per-track "audio features" (energy, valence, tempo, etc.) for new apps in late 2024, so this doesn't read pre-computed audio DNA. Instead, each genre in your library maps to a hand-built instrument archetype, weighted by how often that genre shows up in your top artists; a sustained pad plays one of five hand-written chord progressions in your session's key, deterministically picked so it's consistently "yours"; and your single most-listened-to genre picks a matching synthesized drum pattern, tempo-matched to the session's BPM. Tempo and mode are fixed to a consistent, pleasant range regardless of your library &mdash; only the instrumentation, layering, harmony, and rhythm reflect your actual taste. The mix continuously adds, removes, and mutates layers for as long as you leave the tab open; Shuffle changes the musical mode (and, in turn, the chord progression) and toggles the drums to their other pattern, both landing cleanly on the next bar &mdash; everything else stays put.</p>
+            <div class="how-it-works">
+                <h3>Genre analysis</h3>
+                <p>Spotify deprecated its per-track "audio features" (energy, valence, tempo, etc.) for new apps in late 2024, so this doesn't read pre-computed audio DNA. Instead, each genre in your library maps to one of 11 instrument archetypes &mdash; pop, hip-hop, R&amp;B, funk, electronic, rock, metal, indie, jazz, folk, and reggaeton &mdash; weighted by how often that genre shows up in your top artists. Your library's real, specific sub-genre tags (pulled from Last.fm, since Spotify no longer returns them) show up right in your Sound Receipt below, next to whichever broader cluster they landed in.</p>
+
+                <h3>Rhythm &amp; melody, from real data</h3>
+                <p>Drum grooves, melodic rhythm/motion, and a dedicated bassline are all derived from real songs &mdash; drums from Google's Groove MIDI Dataset (genre-tagged human drummer performances), melody and bass from the Lakh MIDI Dataset (community MIDI transcriptions matched to genre labels) &mdash; aggregated into per-genre statistics across hundreds of songs, never any single recognizable riff, then used to drive a live Markov random walk so nothing ever repeats verbatim. The drum arrangement itself &mdash; when it builds, when it drops back down, how long each section actually sits &mdash; is sampled the same way from real song-structure data (the Harmonix Set, 900+ human-annotated songs), so a genre that tends to linger on its hook or one that jumps around more both come through in how the piece unfolds, not just what it sounds like moment to moment. Tempo comes from that same dataset's real per-genre BPM spread rather than one fixed number &mdash; expect something laid-back for folk-heavy libraries and something considerably quicker for electronic-heavy ones, within a 60-140 BPM range.</p>
+
+                <h3>Harmony</h3>
+                <p>The musical mode itself &mdash; major, minor, Dorian, Phrygian, and so on &mdash; is chosen from a set of modes real songs in your dominant genre actually tend to use, deterministically so it's consistently "yours": pop and rock lean major/pentatonic, jazz gets the widest palette of any genre here, tech house and trap lean Phrygian, folk gets its own well-known "folk modes," and so on. A pad plays one of five hand-written chord progressions in that mode and your session's key; the bass stays harmonically locked to whatever chord is currently sounding. For pop, rock, indie, and folk specifically, that pad doesn't just hold each chord &mdash; it actually strums it, in real guitar strum patterns, so those four read like a played instrument instead of a synth pad underneath everything else.</p>
+
+                <h3>Sound design</h3>
+                <p>The drum kit's actual sound, the pad's own timbre, and the bassline's own instrument all change with your dominant genre too: an electronic-heavy library gets a punchier, clickier kit, a detuned supersaw pad, and a resonant acid-style bass; a jazz-heavy one gets a softer brushed kit with a genuine ride cymbal, an electric-piano-style pad, and a plucked upright-ish bass; and so on.</p>
+
+                <h3>What's fixed, and how it evolves</h3>
+                <p>Every session also opens one of three ways &mdash; the full mix swelling in together, a solo drum cold-open, or a bass-led one &mdash; instead of the same slow fade-in every time. The mix continuously adds, removes, and mutates layers for as long as you leave the tab open; Shuffle steps to the next mode within your genre's own idiomatic set (and, in turn, the chord progression) and toggles the drums to their other pattern, both landing cleanly on the next bar &mdash; everything else stays put.</p>
+            </div>
         </section>
     </div>
 
     <script src="https://unpkg.com/tone@14.8.49/build/Tone.js"></script>
     <script src="audio-viz/music-theory.js"></script>
+    <script src="audio-viz/genre-modes.js"></script>
     <script src="audio-viz/chord-progressions.js"></script>
     <script src="audio-viz/genre-engine.js"></script>
+    <script src="audio-viz/melodic-data.js"></script>
+    <script src="audio-viz/arrangement-data.js"></script>
+    <script src="audio-viz/tempo-data.js"></script>
     <script src="audio-viz/instrument-archetypes.js"></script>
     <script src="audio-viz/synth-layer.js"></script>
+    <script src="audio-viz/chord-timbres.js"></script>
     <script src="audio-viz/chord-layer.js"></script>
+    <script src="audio-viz/bass-timbres.js"></script>
+    <script src="audio-viz/bass-layer.js"></script>
     <script src="audio-viz/drum-patterns.js"></script>
+    <script src="audio-viz/drum-kits.js"></script>
     <script src="audio-viz/drum-layer.js"></script>
     <script src="audio-viz/soundscape-engine.js"></script>
     <script src="audio-viz/spotify-auth.js"></script>

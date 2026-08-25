@@ -6,10 +6,10 @@
 // across the other files in this folder.
 //
 // Load order matters -- see soundscapeify.html:
-//   Tone.js, music-theory, chord-progressions, genre-engine,
-//   instrument-archetypes, synth-layer, chord-layer, drum-patterns,
-//   drum-layer, soundscape-engine, spotify-auth, spotify-data,
-//   genre-lookup, visualizer, main (this file, last)
+//   Tone.js, music-theory, chord-progressions, genre-engine, melodic-data,
+//   instrument-archetypes, synth-layer, chord-layer, bass-layer,
+//   drum-patterns, drum-layer, soundscape-engine, spotify-auth,
+//   spotify-data, genre-lookup, visualizer, main (this file, last)
 
 (function () {
     "use strict";
@@ -101,7 +101,7 @@
         const dominantCluster = Object.entries(proportions).sort((a, b) => b[1] - a[1])[0]?.[0] ?? GenreEngine.FALLBACK_CLUSTER;
 
         pendingAudioSetup = { pool, root, genreDiversity, spotifyUserId: user.id, dominantCluster };
-        renderReceipt({ proportions, topArtists, savedTracks, root });
+        renderReceipt({ proportions, artistsWithGenres, savedTracks, root });
         wirePlayButton();
 
         showState("result");
@@ -141,6 +141,7 @@
             ...engineChangeCallbacks(),
         });
         engine.start();
+        updateBpmLabel(engine.bpm); // only known once the engine actually picks one -- see soundscape-engine.js
 
         stopVisualizerFn = startVisualizer(document.getElementById("av-visualizer"), analyser);
         wireShuffleButton();
@@ -189,6 +190,8 @@
         document.getElementById("av-mode-label").textContent = "";
         document.getElementById("av-progression-label").textContent = "";
         document.getElementById("av-drum-label").textContent = "";
+        document.getElementById("av-bpm").textContent = "—"; // re-picked on the next Play click
+        document.getElementById("av-debug-genre-label").textContent = "";
 
         wirePlayButton(); // re-arm Play for a fresh start
     }
@@ -233,11 +236,37 @@
     // tempo/mode all atomically -- those are baked into each layer at
     // construction time (see soundscape-engine.js), not live-adjustable
     // AudioParams.
+    //
+    // -- Genre proportions: sparse and skewed, not flat across every cluster --
+    // Used to roll an independent Math.random() for EVERY cluster and
+    // normalize -- with this many clusters (11, as of genre-engine.js's
+    // 7->11 split), that reliably averages out to a fairly even blend
+    // every time (the more independent draws you
+    // normalize together, the closer the result sits to uniform), so
+    // every randomize click sounded like the same "everything a little"
+    // mix rather than testing what any one genre's real drum/melody/
+    // bass/arrangement/tempo data actually sounds like on its own. Real
+    // libraries don't look like that either -- most people have one or
+    // two dominant genres, not eleven equal ones.
+    //
+    // Fixed by picking a small random SUBSET of clusters (1-3) to have
+    // any weight at all, and skewing weights within that subset
+    // (Math.random() ** 2, which concentrates mass toward one value
+    // instead of spreading it evenly) so even a 2-3 cluster roll usually
+    // still has one clear leader. Every downstream value -- pool,
+    // dominantCluster, genreDiversity, and (via TempoData/ArrangementData/
+    // MelodicData inside SoundscapeEngine) tempo, drum arrangement, and
+    // melodic/bass character -- is generated FROM these same rolled
+    // proportions, same as a real session.
     function debugRandomizeAll() {
         if (!engine || !audioChain) return; // only meaningful once something's actually playing
 
+        const shuffledClusters = [...GenreEngine.CLUSTER_NAMES].sort(() => Math.random() - 0.5);
+        const activeCount = 1 + Math.floor(Math.random() * 3); // 1-3 clusters get any weight at all
+        const activeClusters = shuffledClusters.slice(0, activeCount);
+
         const weights = {};
-        for (const cluster of GenreEngine.CLUSTER_NAMES) weights[cluster] = Math.random();
+        for (const cluster of activeClusters) weights[cluster] = Math.random() ** 2; // skewed, see above
         const total = Object.values(weights).reduce((a, b) => a + b, 0) || 1;
         for (const cluster of Object.keys(weights)) weights[cluster] /= total;
 
@@ -246,20 +275,36 @@
         const genreDiversity = slots.length;
         const dominantCluster = slots[0]?.[0] ?? GenreEngine.FALLBACK_CLUSTER;
 
+        // the real Sound Receipt panel deliberately keeps showing your
+        // actual library (see comment above) -- this is a separate,
+        // debug-only readout of the rolled proportions actually driving
+        // what's about to play, so you can judge "does this sound like
+        // what 70% electronic / 30% folk should sound like" instead of
+        // guessing blind
+        const debugGenreLabel = document.getElementById("av-debug-genre-label");
+        debugGenreLabel.textContent = "Debug mix: " + Object.entries(weights)
+            .sort((a, b) => b[1] - a[1])
+            .map(([cluster, w]) => `${cluster} ${Math.round(w * 100)}%`)
+            .join(", ");
+
         // a fresh fake ID re-rolls root note AND (inside ChordLayer) chord
         // progression choice, since both are hashed from this same string
         const fakeUserId = `debug-${Math.random().toString(36).slice(2)}`;
         const root = MusicTheory.pickRootNote(fakeUserId);
-        const initialMode = MusicTheory.MODE_NAMES[Math.floor(Math.random() * MusicTheory.MODE_NAMES.length)];
-        const bpm = 100 + Math.floor(Math.random() * 11); // full safe-zone range, inclusive of both ends
+        // no explicit bpm or initialMode here -- SoundscapeEngine picks
+        // both from TempoData/GenreModes using this (randomly rolled)
+        // dominantCluster, same path a real session takes, so this
+        // button also exercises real genre-aware tempo/mode selection
+        // instead of a separate uniform-random range
 
         engine.stop();
         engine = new SoundscapeEngine({
-            pool, root, genreDiversity, spotifyUserId: fakeUserId, dominantCluster, bpm, initialMode,
+            pool, root, genreDiversity, spotifyUserId: fakeUserId, dominantCluster,
             outputBus: audioChain.masterBus,
             ...engineChangeCallbacks(),
         });
         engine.start();
+        updateBpmLabel(engine.bpm);
 
         document.getElementById("av-mode-label").textContent = `Now playing in: ${engine.currentMode}`;
     }
@@ -281,17 +326,21 @@
         label.textContent = `Now playing in: ${engine.currentMode}`;
     }
 
-    // "Sound receipt" panel: top genre clusters by weight, plus a couple
-    // of fun derived stats. Good-faith, human-readable summary of the
-    // same numbers driving the audio, for the "how this works" story.
-    function renderReceipt({ proportions, topArtists, savedTracks, root }) {
+    // "Sound receipt" panel: top genre clusters by weight, real sub-genre
+    // tags feeding each one, plus a couple of fun derived stats.
+    // Good-faith, human-readable summary of the same numbers driving the
+    // audio, for the "how this works" story.
+    function renderReceipt({ proportions, artistsWithGenres, savedTracks, root }) {
         const list = document.getElementById("av-genre-list");
         list.innerHTML = "";
+        const subGenres = subGenreTagsByCluster(artistsWithGenres);
         Object.entries(proportions)
             .sort((a, b) => b[1] - a[1])
             .forEach(([cluster, weight]) => {
                 const li = document.createElement("li");
-                li.textContent = `${cluster} — ${Math.round(weight * 100)}%`;
+                const tags = subGenres[cluster];
+                const tagSuffix = tags && tags.length > 0 ? ` (${tags.join(", ")})` : "";
+                li.textContent = `${cluster} — ${Math.round(weight * 100)}%${tagSuffix}`;
                 list.appendChild(li);
             });
 
@@ -300,6 +349,52 @@
 
         const avgYear = averageReleaseYear(savedTracks);
         document.getElementById("av-avg-year").textContent = avgYear ?? "unknown";
+    }
+
+    // GENRE_KEYWORDS (genre-engine.js) collapses real, specific tags --
+    // "synthwave," "post-punk," "neo soul" -- down into one of 11 broad
+    // clusters, which is exactly what's needed to pick instruments/
+    // rhythms/tempo, but throws away the part a listener would actually
+    // recognize as their own taste. This recovers it purely for display:
+    // classify each RAW tag on its own (not just each artist's full
+    // genre list) to see which cluster(s) it lands in, count how often
+    // each tag shows up, and keep the most common few per cluster.
+    //
+    // A tag identical to its own cluster name ("pop" landing under
+    // "pop") is dropped -- that's not adding any information the
+    // cluster label didn't already give. `fallback` never shows tags:
+    // by definition, nothing it received classified as anything.
+    function subGenreTagsByCluster(artistsWithGenres) {
+        const TOP_N = 3;
+        const counts = {}; // cluster -> { tag -> count }
+        for (const artist of artistsWithGenres) {
+            for (const tag of artist.genres ?? []) {
+                for (const cluster of GenreEngine.classifyGenres([tag])) {
+                    if (cluster === GenreEngine.FALLBACK_CLUSTER) continue;
+                    if (tag.toLowerCase() === cluster) continue;
+                    counts[cluster] ??= {};
+                    counts[cluster][tag] = (counts[cluster][tag] ?? 0) + 1;
+                }
+            }
+        }
+        const topTags = {};
+        for (const [cluster, tagCounts] of Object.entries(counts)) {
+            topTags[cluster] = Object.entries(tagCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, TOP_N)
+                .map(([tag]) => tag);
+        }
+        return topTags;
+    }
+
+    // Separate from renderReceipt() because bpm isn't known that early --
+    // it's picked inside SoundscapeEngine's constructor (real per-genre
+    // data plus some randomness, see tempo-data.js), not derivable from
+    // anything prepareData() has on hand. Called once the engine that
+    // will actually be playing has been constructed, from both
+    // startAudio() and debugRandomizeAll().
+    function updateBpmLabel(bpm) {
+        document.getElementById("av-bpm").textContent = `${Math.round(bpm)} BPM`;
     }
 
     function averageReleaseYear(savedTracks) {

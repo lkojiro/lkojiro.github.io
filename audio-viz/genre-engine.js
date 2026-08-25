@@ -14,16 +14,70 @@
     // Keyword -> cluster lookup. A genre tag matches a cluster if it
     // *contains* any of these substrings. Order doesn't matter; a tag can
     // match multiple clusters (e.g. "indie pop" hits both indie and pop).
-    // Extend this list over time as you see real Spotify tags come through
-    // that aren't landing anywhere useful.
+    // Extend this list over time as you see real Spotify/Last.fm tags come
+    // through that aren't landing anywhere useful.
+    //
+    // 11 clusters, not the original 7 -- metal, rnb, funk, and reggaeton
+    // split off from rock/hiphop once each had real per-genre data behind
+    // it (Harmonix Set for arrangement/tempo; funk and rnb additionally
+    // have real Groove MIDI Dataset drum data and real Lakh MIDI Dataset
+    // melody/bass data -- metal has real LMD melody/bass too; reggaeton
+    // and funk's drums/melody don't, and stay hand-authored the same way
+    // indie/fallback already do elsewhere in this project -- see
+    // instrument-archetypes.js/drum-patterns.js for exactly which). Splitting
+    // these out matters even where the underlying data is thin: before this,
+    // a Last.fm tag of "metal" or "r&b" or "reggaeton" matched a rock/hiphop
+    // keyword and got that cluster's timbre and rhythm, never its own.
+    //
+    // This list was also substantially widened (not just the 4 new
+    // clusters) to cut down on real tags landing in `fallback` for no good
+    // reason -- the original list only had 3-5 keywords per cluster.
     const GENRE_KEYWORDS = {
-        pop:        ["pop", "dance pop", "electropop"],
-        hiphop:     ["hip hop", "rap", "trap", "r&b", "soul"],
-        electronic: ["edm", "house", "techno", "electronic", "dubstep", "dnb", "drum and bass"],
-        indie:      ["indie", "bedroom", "alternative", "alt "],
-        rock:       ["rock", "metal", "punk", "grunge", "hardcore"],
-        jazz:       ["jazz", "classical", "orchestral", "instrumental", "piano"],
-        folk:       ["folk", "acoustic", "singer-songwriter", "americana"],
+        pop: [
+            "pop", "dance pop", "electropop", "synth-pop", "synthpop",
+            "pop rock", "teen pop", "k-pop", "art pop", "power pop", "pop punk",
+        ],
+        hiphop: [
+            "hip hop", "hip-hop", "rap", "trap", "drill", "boom bap",
+            "conscious hip hop", "gangsta rap", "grime",
+        ],
+        electronic: [
+            "edm", "house", "techno", "electronic", "dubstep", "dnb", "drum and bass",
+            "trance", "electro", "synthwave", "vaporwave", "idm", "garage",
+            "breakbeat", "downtempo", "chillwave", "future bass", "electronica",
+        ],
+        indie: [
+            "indie", "bedroom", "alternative", "alt ", "indie rock", "indie pop",
+            "indie folk", "lo-fi", "lofi", "shoegaze", "slacker rock", "dream pop",
+        ],
+        rock: [
+            "rock", "punk", "grunge", "hardcore", "classic rock", "hard rock",
+            "garage rock", "post-punk", "psychedelic rock", "prog rock",
+            "progressive rock", "southern rock", "arena rock",
+        ],
+        metal: [
+            "metal", "metalcore", "deathcore", "death metal", "black metal",
+            "thrash metal", "nu metal", "doom metal", "power metal",
+            "heavy metal", "industrial metal", "djent",
+        ],
+        jazz: [
+            "jazz", "classical", "orchestral", "instrumental", "piano",
+            "bebop", "swing", "fusion", "big band", "smooth jazz",
+            "chamber music", "baroque",
+        ],
+        folk: [
+            "folk", "acoustic", "singer-songwriter", "americana", "country",
+            "bluegrass", "folk rock",
+        ],
+        rnb: [
+            "r&b", "rnb", "soul", "neo soul", "neo-soul", "quiet storm", "motown",
+        ],
+        funk: [
+            "funk", "disco", "boogie", "p-funk", "funk rock",
+        ],
+        reggaeton: [
+            "reggaeton", "dembow", "latin urban", "latin trap",
+        ],
     };
 
     const CLUSTER_NAMES = Object.keys(GENRE_KEYWORDS);
