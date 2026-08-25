@@ -171,6 +171,17 @@ p.note {
     color: var(--muted);
     font-size: 0.85rem;
 }
+.how-it-works h3 {
+    margin-top: 1.25rem;
+}
+.how-it-works h3:first-child {
+    margin-top: 0;
+}
+.how-it-works p {
+    color: var(--muted);
+    font-size: 1rem;
+    line-height: 1.5;
+}
 a {
     color: var(--link);
 }

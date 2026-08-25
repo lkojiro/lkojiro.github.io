@@ -7,15 +7,24 @@
 // Variation mechanisms, each on a different/non-aligned timescale so their
 // combination never audibly loops (see design notes -- this is the same
 // trick Reich-style phasing / Eno generative patches use):
-//   - degree-pattern "wander": small random walk that's gravity-pulled
-//     back toward the original seed pattern every step
+//   - pitch motion: TWO different mechanisms depending on whether the
+//     archetype has real data behind it (see instrument-archetypes.js /
+//     melodic-data.js) --
+//       * data-backed clusters (pop/hiphop/rock/jazz/electronic/folk):
+//         a live Markov random walk through a per-genre interval
+//         transition table derived from hundreds of real songs -- never
+//         repeats a fixed lick, stays statistically genre-shaped
+//       * indie/fallback (no equivalent data exists): the original
+//         fixed-seed-pattern "wander" -- a small random walk that's
+//         gravity-pulled back toward a hand-authored seed every step
 //   - velocity "breathing" LFO (~70-90s period, phase offset per layer)
 //   - filter cutoff LFO (~40-55s period, deliberately NOT a clean multiple
 //     of the velocity LFO period, so they drift in and out of phase)
 //   - rare octave accents
 //   - tiny per-note timing jitter (humanization)
 //
-// Depends on: Tone.js, music-theory.js, instrument-archetypes.js
+// Depends on: Tone.js, music-theory.js, instrument-archetypes.js,
+// melodic-data.js (for the data-backed clusters' Markov walk)
 
 (function (global) {
     "use strict";
@@ -24,6 +33,13 @@
     const OCTAVE_ACCENT_CHANCE = 0.1;
     const WANDER_CHANCE = 0.18;
     const WANDER_GRAVITY = 0.6; // 0 = never returns to seed, 1 = snaps back instantly
+
+    // Register bounds for the Markov walk, in scale-degree units (not
+    // semitones) -- reflects off these rather than hard-clamping, see
+    // melodic-data.js's stepMarkov(). Wide enough for ~1.5-2 octaves of
+    // roam depending on the current mode's degree count.
+    const MARKOV_MIN_DEGREE = -3;
+    const MARKOV_MAX_DEGREE = 8;
 
     let nextLayerId = 0;
 
@@ -46,10 +62,18 @@
             this.gainNode = new Tone.Gain(0); // starts silent; fadeIn() brings it up
             this.instrument.chain(this.filter, this.gainNode, outputBus);
 
-            // seed pattern is never mutated in place -- `wanderedDegrees` is
-            // the live, drifting copy; `degreePatternSeed` is gravity's target
-            this.degreePatternSeed = archetype.degreePatternSeed;
-            this.wanderedDegrees = archetype.degreePatternSeed.slice();
+            if (archetype.intervalMarkov) {
+                // data-backed cluster: live Markov walk state, starts at
+                // the root (degree 0) with no prior motion
+                this.currentDegree = 0;
+                this.prevBucket = 0;
+            } else {
+                // hand-authored cluster: seed pattern is never mutated in
+                // place -- `wanderedDegrees` is the live, drifting copy;
+                // `degreePatternSeed` is gravity's target
+                this.degreePatternSeed = archetype.degreePatternSeed;
+                this.wanderedDegrees = archetype.degreePatternSeed.slice();
+            }
             this.rhythmGrid = archetype.rhythmGrid;
             this.stepIndex = 0;
 
@@ -98,22 +122,39 @@
             const step = this.stepIndex % this.rhythmGrid.length;
             this.stepIndex++;
 
-            if (this.rhythmGrid[step] !== 1) return; // rest step, nothing to trigger
+            // rhythmGrid holds a PROBABILITY (0-1), not just a boolean --
+            // hand-authored 1/0 patterns are unaffected (Math.random() is
+            // always < 1 and never < 0), while the data-backed genres' real
+            // hit-probabilities get to add their own natural per-repetition
+            // variation instead of triggering identically every time
+            if (Math.random() > this.rhythmGrid[step]) return; // rest step, nothing to trigger
 
-            const seedDegree = this.degreePatternSeed[step % this.degreePatternSeed.length];
-            const priorDegree = this.wanderedDegrees[step % this.wanderedDegrees.length];
+            let degree;
+            if (this.archetype.intervalMarkov) {
+                const stepped = global.MelodicData.stepMarkov(
+                    this.archetype.intervalMarkov, this.prevBucket, this.currentDegree,
+                    MARKOV_MIN_DEGREE, MARKOV_MAX_DEGREE
+                );
+                this.currentDegree = stepped.degree;
+                this.prevBucket = stepped.bucket;
+                degree = stepped.degree;
+            } else {
+                const seedDegree = this.degreePatternSeed[step % this.degreePatternSeed.length];
+                const priorDegree = this.wanderedDegrees[step % this.wanderedDegrees.length];
 
-            // random walk, gravity-biased back toward the seed so the layer
-            // never drifts into being unrecognizable over a long session
-            let degree = priorDegree;
-            if (Math.random() < WANDER_CHANCE) {
-                const nudge = Math.random() < 0.5 ? -1 : 1;
-                const wandered = priorDegree + nudge;
-                // blend the wandered value with the seed by gravity -- keeps
-                // the walk bounded without a hard clamp
-                degree = Math.round(wandered * (1 - WANDER_GRAVITY) + seedDegree * WANDER_GRAVITY);
+                // random walk, gravity-biased back toward the seed so the
+                // layer never drifts into being unrecognizable over a long
+                // session
+                degree = priorDegree;
+                if (Math.random() < WANDER_CHANCE) {
+                    const nudge = Math.random() < 0.5 ? -1 : 1;
+                    const wandered = priorDegree + nudge;
+                    // blend the wandered value with the seed by gravity --
+                    // keeps the walk bounded without a hard clamp
+                    degree = Math.round(wandered * (1 - WANDER_GRAVITY) + seedDegree * WANDER_GRAVITY);
+                }
+                this.wanderedDegrees[step % this.wanderedDegrees.length] = degree;
             }
-            this.wanderedDegrees[step % this.wanderedDegrees.length] = degree;
 
             const octaveAccent = Math.random() < OCTAVE_ACCENT_CHANCE ? (Math.random() < 0.5 ? 12 : -12) : 0;
             const layerRoot = this.root + this.archetype.octaveOffset * 12;
