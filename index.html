@@ -83,6 +83,12 @@
         <hr>
         <h2>Projects</h2>
 
+        <h3>Music in the Matrix &mdash; Terminal-Native Audio Visualizer in C++</h3>
+        <p class="meta">A from-scratch, zero-dependency system-audio visualizer for macOS</p>
+        <video class="project-media" src="https://github.com/user-attachments/assets/f2b53c06-9ebf-420b-8c52-5db6b4ed0a8b" controls loop muted playsinline></video>
+        <p>Reacts live to system audio &mdash; level and detected beats &mdash; across six ncurses-rendered visual modes (FFT bar charts, Matrix-style digital rain, checkerboard, oscilloscope, and VU-meter bands), switchable on the fly, with support for spawning any number of synced windows from a single audio pipeline. A single process runs the only audio-capture &rarr; FFT &rarr; beat-detection pipeline and fans it out over a hand-rolled Unix-socket IPC protocol; beat detection is a hand-rolled spectral-flux/adaptive-threshold detector kept license-clean since every mainstream real-time beat tracker is GPL/AGPL. A from-scratch HTTP server also powers a browser-based control panel for every open window.</p>
+        <a href="https://github.com/lkojiro/MusicInTheMatrix">GitHub</a>
+
         <h3>Terminal Tracer &mdash; C++20 Real-Time 3D Rasterizer</h3>
         <p class="meta">A personal academic exercise in computer graphics</p>
         <video class="project-media" src="assets/ascii_animation.mp4" autoplay loop muted playsinline></video>
